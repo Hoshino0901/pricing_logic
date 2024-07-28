@@ -25,9 +25,9 @@ namespace PricingLogic
             Maturity = T;
             Strike = K;
         }
-        private double ReturnPayoffWRTPV(double x, double t)
+        private double ReturnPayoff(double x)
         {
-            return Math.Max(x - Strike, 0) * Math.Exp(-InteRate * (Maturity - t));
+            return Math.Max(x - Strike, 0);
         }
         private double[] GeneratePathByEM(double[] bm)
         {
@@ -57,7 +57,7 @@ namespace PricingLogic
                 {
                     x[m, n] = path[n];
                 }
-                objectiveVariable[m] = ReturnPayoffWRTPV(x[m, N], dt * (N - 1));
+                objectiveVariable[m] = ReturnPayoff(x[m, N]) * Math.Exp(-InteRate * dt);
             }
             for (int n = N - 1; n > 0; n--)
             {
@@ -74,7 +74,7 @@ namespace PricingLogic
                                          + coeff[1] * explanatoryVariable[m]
                                          + coeff[2] * explanatoryVariable[m] * explanatoryVariable[m]
                                          + coeff[3] * explanatoryVariable[m] * explanatoryVariable[m] * explanatoryVariable[m];
-                    objectiveVariable[m] = Math.Max(objectiveVariable[m] * Math.Exp(-InteRate * dt), ReturnPayoffWRTPV(explanatoryVariable[m], Maturity));
+                    objectiveVariable[m] = Math.Max(objectiveVariable[m] * Math.Exp(-InteRate * dt), ReturnPayoff(explanatoryVariable[m]));
 
                 }
             }

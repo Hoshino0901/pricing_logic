@@ -10,9 +10,9 @@ namespace PricingLogic
     {
         static void Main(string[] args)
         {
-            double s0 = 75;
+            double s0 = 125;
             double r = 0.02;
-            double sigma = 0.3;
+            double sigma = 0.7;
             double T = 2;
             double K = 100;
 
