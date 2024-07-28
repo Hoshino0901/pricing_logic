@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MathNet.Numerics;
-using MathNet.Numerics.Distributions;
-using MathNet.Numerics.Optimization;
-using MathNet.Numerics.Random;
-using MathNet.Numerics.LinearRegression;
 
 namespace PricingLogic
 {
@@ -28,19 +23,23 @@ namespace PricingLogic
             Strike = K;
         }
 
-        private double TerminalCondition(double K, double x)
+        private double ReturnPayoffWRTPV(double x, double t)
         {
-            return Math.Max(x - K, 0);
+            return Math.Max(x - Strike, 0) * Math.Exp(-InteRate * (Maturity - t));
+        }
+        private double TerminalCondition(double x)
+        {
+            return Math.Max(x - Strike, 0);
         }
 
-        private double BoundaryConditionAtZero(double K, double t)
+        private double BoundaryConditionAtZero(double t)
         {
             return 0;
         }
 
-        private double BoundaryConditionAtInfty(double r, double T, double X, double K, double t)
+        private double BoundaryConditionAtInfty(double X, double t)
         {
-            return X - Math.Exp(-r * (T - t)) * K;
+            return X - Math.Exp(-InteRate * (Maturity - t)) * Strike;
         }
 
         public double ImplicitFdm(int N, int x = 8)
@@ -67,13 +66,13 @@ namespace PricingLogic
 
             for (int j = 0; j <= M; j++)
             {
-                fSim[N, j] = TerminalCondition(Strike, j * dx);
+                fSim[N, j] = TerminalCondition(j * dx);
             }
 
             for (int i = 0; i <= N; i++)
             {
-                fSim[i, 0] = BoundaryConditionAtZero(Strike, i * dt);
-                fSim[i, M] = BoundaryConditionAtInfty(InteRate, Maturity, X, Strike, i * dt);
+                fSim[i, 0] = BoundaryConditionAtZero(i * dt);
+                fSim[i, M] = BoundaryConditionAtInfty(X, i * dt);
             }
 
             double[] a = new double[M]; // a[0]は使わない
@@ -111,6 +110,10 @@ namespace PricingLogic
                 for (int j = M - 2; j > 0; j--)
                 {
                     fSim[i, j] = -P[j] * fSim[i, j + 1] + Q[j];
+                }
+                for (int j = 0; j < M; j++)
+                {
+                    fSim[i, j] = Math.Max(fSim[i, j], ReturnPayoffWRTPV(dx * j, dt * i));
                 }
             }
             int index = (int)(S0 / dx);

@@ -49,6 +49,7 @@
     <Compile Include="AnalyticBS.cs" />
     <Compile Include="Fdm.cs" />
     <Compile Include="Lsm.cs" />
+    <Compile Include="LsmEuropean.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

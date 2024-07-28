@@ -5,11 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using MathNet.Numerics;
 using MathNet.Numerics.Distributions;
+using MathNet.Numerics.Optimization;
 using MathNet.Numerics.Random;
+using MathNet.Numerics.LinearRegression;
 
 namespace PricingLogic
 {
-    public class Lsm
+    public class LsmEuropean
     {
         public double S0 { get; private set; }
         public double InteRate { get; private set; }
@@ -17,7 +19,7 @@ namespace PricingLogic
         public double Maturity { get; private set; }
         public double Strike { get; private set; }
 
-        public Lsm(double s0, double r, double sigma, double T, double K)
+        public LsmEuropean(double s0, double r, double sigma, double T, double K)
         {
             S0 = s0;
             InteRate = r;
@@ -25,7 +27,7 @@ namespace PricingLogic
             Maturity = T;
             Strike = K;
         }
-        private double ReturnPayoffWRTPV(double x, double t)
+        private double EuropeanPayoff(double x, double t)
         {
             return Math.Max(x - Strike, 0) * Math.Exp(-InteRate * (Maturity - t));
         }
@@ -43,8 +45,7 @@ namespace PricingLogic
 
         public double LeastSquareMonte(int N, int M, int seed = 0)
         {
-            double dt = Maturity / N;
-            var x = new double[M, N+1];
+            var x = new double[M, N + 1];
             var objectiveVariable = new double[M];
             var mt = new MersenneTwister(seed);
             var normalDist = new Normal(0, 1, mt);
@@ -57,33 +58,24 @@ namespace PricingLogic
                 {
                     x[m, n] = path[n];
                 }
-                objectiveVariable[m] = ReturnPayoffWRTPV(x[m, N], dt * (N - 1));
             }
-            for (int n = N - 1; n > 0; n--)
+            for (int m = 0; m < M; m++)
             {
-                var explanatoryVariable = new double[M];
-                for (int m = 0; m < M; m++)
-                {
-                    explanatoryVariable[m] = x[m, n];
-                }
-                int degree = 3;
-                double[] coeff = Fit.Polynomial(explanatoryVariable, objectiveVariable, degree);
-                for (int m = 0; m < M; m++)
-                {
-                    objectiveVariable[m] = coeff[0]
-                                         + coeff[1] * explanatoryVariable[m]
-                                         + coeff[2] * explanatoryVariable[m] * explanatoryVariable[m]
-                                         + coeff[3] * explanatoryVariable[m] * explanatoryVariable[m] * explanatoryVariable[m];
-                    objectiveVariable[m] = Math.Max(objectiveVariable[m] * Math.Exp(-InteRate * dt), ReturnPayoffWRTPV(explanatoryVariable[m], Maturity));
-
-                }
+                objectiveVariable[m] = EuropeanPayoff(x[m, N], 0);
             }
+            var explanatoryVariable = new double[M];
+            for (int m = 0; m < N; m++)
+            {
+                explanatoryVariable[m] = S0;
+            }
+            int degree = 3;
+            double[] coeff = Fit.Polynomial(explanatoryVariable, objectiveVariable, degree);
             double expectation = 0;
             for (int m = 0; m < M; m++)
             {
-                expectation += objectiveVariable[m];
+                expectation += coeff[0] + coeff[1] * explanatoryVariable[m] + coeff[2] * explanatoryVariable[m] * explanatoryVariable[m] + coeff[3] * explanatoryVariable[m] * explanatoryVariable[m] * explanatoryVariable[m];
             }
-            return expectation / M * Math.Exp(-InteRate * dt);
+            return expectation / M;
         }
     }
 }

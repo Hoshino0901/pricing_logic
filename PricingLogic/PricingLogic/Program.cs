@@ -12,7 +12,7 @@ namespace PricingLogic
         {
             double s0 = 75;
             double r = 0.02;
-            double sigma = 0.1;
+            double sigma = 0.3;
             double T = 2;
             double K = 100;
 
@@ -22,12 +22,18 @@ namespace PricingLogic
             int N = 100;
 
             //int M = (int)1e6;
-            //var lsm = new Lsm(s0, r, sigma, T, K);
+            //var lsm = new LsmEuropean(s0, r, sigma, T, K);
             //double lsmPrice = lsm.LeastSquareMonte(N, M);
-
             //double lsmError = Math.Abs(lsmPrice - analyticPrice);
             //Console.WriteLine($"analytic price : {analyticPrice}, lsm price : {lsmPrice}");
             //Console.WriteLine($"error : {lsmError}");
+
+            int M = (int)1e5;
+            var lsm = new Lsm(s0, r, sigma, T, K);
+            double lsmPrice = lsm.LeastSquareMonte(N, M);
+            double lsmError = Math.Abs(lsmPrice - analyticPrice);
+            Console.WriteLine($"analytic price : {analyticPrice}, lsm price : {lsmPrice}");
+            Console.WriteLine($"error : {lsmError}");
 
             N = 5000;
             var fdm = new Fdm(s0, r, sigma, T, K);
