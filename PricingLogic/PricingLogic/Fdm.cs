@@ -23,7 +23,7 @@ namespace PricingLogic
             Strike = K;
         }
 
-        private double ReturnPayoffWRTPV(double x, double t)
+        private double ReturnPayoffPV(double x, double t)
         {
             return Math.Max(x - Strike, 0) * Math.Exp(-InteRate * (Maturity - t));
         }
@@ -113,7 +113,7 @@ namespace PricingLogic
                 }
                 for (int j = 0; j < M; j++)
                 {
-                    fSim[i, j] = Math.Max(fSim[i, j], ReturnPayoffWRTPV(dx * j, dt * i));
+                    fSim[i, j] = Math.Max(fSim[i, j], ReturnPayoffPV(dx * j, dt * i));
                 }
             }
             int index = (int)(S0 / dx);
