@@ -21,22 +21,22 @@ def generate_path_by_EM(sigma, r, K, T, S0, N):
     return path
 
 def least_square_monte(sigma, r, K, T, S0, M, N):
-    x = np.zeros((M, N+1))
+    x = np.zeros(M) + S0
+    paths = np.zeros((M, N+1))
     for m in range(M):
-        x[m, :] = generate_path_by_EM(sigma, r, K, T, S0, N)
+        paths[m, :] = generate_path_by_EM(sigma, r, K, T, S0, N)
     y = np.zeros((M, N+1))
     for m in range(M):
-        y[m, N] = math.exp(-r * T) * european_payoff(x[m, N], K)
+        y[m, N] = math.exp(-r * T) * european_payoff(paths[m, N], K)
 
-    def polynomial(x, a, b, c):
-        return a * x + b * x * x +  c * x * x * x
+    def polynomial(x, a, b, c, d):
+        return a + b * x + c * x * x +  d * x * x * x
 
-    params, cov = curve_fit(polynomial, x[:, N], y[:, N])
-    a, b, c = params
-    exp = 0
+    params, cov = curve_fit(polynomial, x, y[:, N])
+    a, b, c, d = params
     for m in range(M):
-        exp += a * x[m, N] + b * x[m, N] * x[m, N] + c * x[m, N] * x[m, N] * x[m, N]
-    return exp / M
+        expectation += a + b * x[m] + c * x[m] * x[m] + d * x[m] * x[m] * x[m]
+    return expectation / M
 
 if __name__ == "__main__":
     S0 = 125
