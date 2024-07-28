@@ -34,9 +34,10 @@ def least_square_monte(sigma, r, K, T, S0, M, N):
 
     params, cov = curve_fit(polynomial, x, y[:, N])
     a, b, c, d = params
+    expectation_value = 0
     for m in range(M):
-        expectation += a + b * x[m] + c * x[m] * x[m] + d * x[m] * x[m] * x[m]
-    return expectation / M
+        expectation_value += a + b * x[m] + c * x[m] * x[m] + d * x[m] * x[m] * x[m]
+    return expectation_value / M
 
 if __name__ == "__main__":
     S0 = 125
